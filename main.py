@@ -254,11 +254,12 @@ def about():
 def contact():
     if request.method == "POST":
         data = request.form
-        my_email = os.environ.get('EMAIL')
-        password = os.environ.get('PASSWORD')
+        # SET INFO HERE
+        my_email = ""
+        password = ""
 
         try:
-            with smtplib.SMTP(os.environ.get('HOST'), 587) as connection:
+            with smtplib.SMTP("", 587) as connection:
                 connection.starttls()
                 connection.login(user=my_email, password=password)
                 connection.sendmail(
