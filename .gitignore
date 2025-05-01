@@ -1,3 +1,5 @@
 #Database
 posts.db
 
+#Environment variables
+.env

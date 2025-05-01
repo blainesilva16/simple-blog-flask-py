@@ -1,5 +1,7 @@
+import os, smtplib
+from dotenv import load_dotenv
 from datetime import date
-from flask import session, Flask, abort, render_template, redirect, url_for, flash
+from flask import session, Flask, abort, render_template, redirect, url_for, flash, request
 from flask_bootstrap import Bootstrap5
 from flask_ckeditor import CKEditor
 from flask_gravatar import Gravatar
@@ -12,12 +14,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 # Import your forms from the forms.py
 from forms import *
 
+load_dotenv()
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
+app.config['SECRET_KEY'] = os.environ.get('FLASK_KEY')
 ckeditor = CKEditor(app)
 Bootstrap5(app)
 
-# TODO: Configure Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -27,7 +30,7 @@ app.secret_key = b'3L_[4.Dbp1=;/m4'
 class Base(DeclarativeBase):
     pass
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URI", "sqlite:///posts.db")
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)
 
@@ -77,7 +80,6 @@ class BlogPost(db.Model):
     # Parent relationship to the comments
     comments = relationship("Comment", back_populates="parent_post")
 
-# TODO: Create a User table for all your registered users. 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -121,7 +123,6 @@ def home():
                            current_user=current_user,
                            h1_text="The BS' Blog")
 
-# TODO: Use Werkzeug to hash the user's password when creating a new user.
 @app.route('/register', methods=["GET","POST"])
 def register():
     form = RegisterForm()
@@ -144,8 +145,6 @@ def register():
         return redirect(url_for("home"))
     return render_template("register.html",form=form, current_user=current_user)
 
-
-# TODO: Retrieve a user from the database based on their email. 
 @app.route('/login', methods=["GET","POST"])
 def login():
     form = LoginForm()
@@ -175,7 +174,7 @@ def logout():
     return redirect(url_for('home'))
 
 
-# TODO: Allow logged-in users to comment on posts
+
 @app.route("/post/<int:post_id>", methods=["GET","POST"])
 def show_post(post_id):
     requested_post = db.get_or_404(BlogPost, post_id)
@@ -197,7 +196,6 @@ def show_post(post_id):
     return render_template("post.html", post=requested_post, current_user=current_user,form=comment_form)
 
 
-# TODO: Use a decorator so only an admin user can create a new post
 @app.route("/new-post", methods=["GET", "POST"])
 @admin_only
 def add_new_post():
@@ -216,7 +214,6 @@ def add_new_post():
         return redirect(url_for("home"))
     return render_template("make-post.html", form=form, current_user=current_user)
 
-# TODO: Use a decorator so only an admin user can edit a post
 @app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
 @admin_only
 def edit_post(post_id):
@@ -238,7 +235,6 @@ def edit_post(post_id):
         return redirect(url_for("show_post", post_id=post.id))
     return render_template("make-post.html", form=edit_form, is_edit=True, current_user=current_user)
 
-# TODO: Use a decorator so only an admin user can delete a post
 @app.route("/delete/<int:post_id>")
 @admin_only
 def delete_post(post_id):
@@ -254,11 +250,29 @@ def about():
     return render_template("about.html", current_user=current_user)
 
 
-@app.route("/contact")
+@app.route("/contact", methods=["GET","POST"])
 def contact():
-    if 'username' in session:
-        return render_template("contact.html", is_logged=True)
-    return render_template("contact.html", is_logged=False)
+    if request.method == "POST":
+        data = request.form
+        my_email = os.environ.get('EMAIL')
+        password = os.environ.get('PASSWORD')
+
+        try:
+            with smtplib.SMTP(os.environ.get('HOST'), 587) as connection:
+                connection.starttls()
+                connection.login(user=my_email, password=password)
+                connection.sendmail(
+                    from_addr=my_email,
+                    to_addrs="",
+                    msg=f"Subject:New message!\n\nName: {data["name"]}\n"
+                        f"Email: {data["email"]}\nPhone: {data["phone"]}\n"
+                        f"Message: {data["message"]}")
+        except:
+            return render_template("contact.html", msg_sent=False)
+        else:
+            return render_template("contact.html", msg_sent=True)
+
+    return render_template("contact.html",  msg_sent=False)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
