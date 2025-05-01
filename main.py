@@ -252,25 +252,25 @@ def about():
 
 @app.route("/contact", methods=["GET","POST"])
 def contact():
-    if request.method == "POST":
-        data = request.form
-        my_email = os.environ.get('EMAIL')
-        password = os.environ.get('PASSWORD')
+    # if request.method == "POST":
+    #     # SET INFO HERE
+    #     my_email = ""
+    #     password = ""
 
-        try:
-            with smtplib.SMTP(os.environ.get('HOST'), 587) as connection:
-                connection.starttls()
-                connection.login(user=my_email, password=password)
-                connection.sendmail(
-                    from_addr=my_email,
-                    to_addrs="",
-                    msg=f"Subject:New message!\n\nName: {data["name"]}\n"
-                        f"Email: {data["email"]}\nPhone: {data["phone"]}\n"
-                        f"Message: {data["message"]}")
-        except:
-            return render_template("contact.html", msg_sent=False)
-        else:
-            return render_template("contact.html", msg_sent=True)
+    #     try:
+    #         with smtplib.SMTP("", 587) as connection:
+    #             connection.starttls()
+    #             connection.login(user=my_email, password=password)
+    #             connection.sendmail(
+    #                 from_addr=my_email,
+    #                 to_addrs="",
+    #                 msg=f"Subject:New message!\n\nName: {request.form["name"]}\n"
+    #                     f"Email: {request.form["email"]}\nPhone: {request.form["phone"]}\n"
+    #                     f"Message: {request.form["message"]}")
+    #     except:
+    #         return render_template("contact.html", msg_sent=False)
+    #     else:
+    #         return render_template("contact.html", msg_sent=True)
 
     return render_template("contact.html",  msg_sent=False)
 
