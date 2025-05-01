@@ -253,7 +253,6 @@ def about():
 @app.route("/contact", methods=["GET","POST"])
 def contact():
     if request.method == "POST":
-        data = request.form
         # SET INFO HERE
         my_email = ""
         password = ""
@@ -265,9 +264,9 @@ def contact():
                 connection.sendmail(
                     from_addr=my_email,
                     to_addrs="",
-                    msg=f"Subject:New message!\n\nName: {data["name"]}\n"
-                        f"Email: {data["email"]}\nPhone: {data["phone"]}\n"
-                        f"Message: {data["message"]}")
+                    msg=f"Subject:New message!\n\nName: {request.form["name"]}\n"
+                        f"Email: {request.form["email"]}\nPhone: {request.form["phone"]}\n"
+                        f"Message: {request.form["message"]}")
         except:
             return render_template("contact.html", msg_sent=False)
         else:
